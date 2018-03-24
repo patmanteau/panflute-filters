@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
-"""
+r"""
 Make generated LaTeX listings use Minted
 See also: https://github.com/nick-ulle/pandoc-minted
 
 Usage:
 
-- Add \\usepackage{minted} to your LaTeX preamble
+- Add \usepackage{minted} to your LaTeX preamble
 - For configuration options, see Minted's documentation: https://ctan.org/pkg/minted
 - In Markdown, use a YAML code block (see http://scorreia.com/software/panflute/guide.html#yaml-code-blocks)::
 
     ``` python
     identifier: linear-gradient-descent
     caption: Lineares Gradientenverfahren [vgl. @Cousteau, 33-35]
+    floating: True
     mintedopts: linenos=false, mathescape
     ...
     def gradient_descent(X, y, theta, alpha, iterations):
@@ -35,15 +36,23 @@ Usage:
 from string import Template  # using .format() is hard because of {} in tex
 import panflute as pf
 
-TEMPLATE_CODEBLOCK = Template(r"""\begin{singlespace}
-\begin{listing}[H]
+TEMPLATE_FLOATING_CODEBLOCK = Template(r"""\begin{listing}[htbp]
 \begin{minted}$mintedopts{$language}
 $text
 \end{minted}
 $caption
 $identifier
-\end{listing}
-\end{singlespace}""")
+\end{listing}""")
+
+TEMPLATE_CODEBLOCK = Template(r"""{%
+\singlespacing
+\begin{minted}$mintedopts{$language}
+$text
+\end{minted}
+\unskip
+$caption
+$identifier
+}""")
 
 def fenced_code(options, data, element, doc, language):
     values = {
@@ -54,11 +63,6 @@ def fenced_code(options, data, element, doc, language):
         'text': data
     }
 
-    caption = options.get('caption', '')
-    if caption:
-        converted_caption = pf.convert_text(caption, extra_args=['--biblatex'], input_format='markdown', output_format='latex')
-        values['caption'] = r'\caption{{{}}}'.format(converted_caption)
-
     identifier = options.get('identifier', '')
     if identifier:
         values['identifier'] = r'\label{{{}}}'.format(identifier)
@@ -67,9 +71,21 @@ def fenced_code(options, data, element, doc, language):
     if mintedopts:
         values['mintedopts'] = r'[{}]'.format(mintedopts)
 
-    tex = TEMPLATE_CODEBLOCK.safe_substitute(values)
-    return pf.RawBlock(tex, format='latex')
-
+    caption = options.get('caption', '')
+    floating = options.get('floating', True)#.strip().lower() == 'true'
+    if floating:
+        if caption:
+            converted_caption = pf.convert_text(caption, extra_args=['--biblatex'], input_format='markdown', output_format='latex')
+            values['caption'] = r'\caption{{{}}}'.format(converted_caption)
+        tex = TEMPLATE_FLOATING_CODEBLOCK.safe_substitute(values)
+        return pf.RawBlock(tex, format='latex')
+    else:
+        if caption:
+            converted_caption = pf.convert_text(caption, extra_args=['--biblatex'], input_format='markdown', output_format='latex')
+            values['caption'] = r'\captionof{{listing}}{{{}}}'.format(converted_caption)
+        tex = TEMPLATE_CODEBLOCK.safe_substitute(values)
+        return pf.RawBlock(tex, format='latex')
+    
 def fenced_python(options, data, element, doc):
     # We'll only run this for CodeBlock elements of class 'python'
     return fenced_code(options, data, element, doc, language='python')
