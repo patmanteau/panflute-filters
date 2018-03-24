@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-"""
+r"""
 Panflute filter that allows for acronyms in latex
 
 Usage:
 
 - Use Pandoc markdown bracketed Spans: [SO]{.ac d="Stack Overflow"}
 - When outputting to latex, you must add this line to the preamble:
-\\usepackage[acronym,smallcaps]{glossaries}
+\usepackage[acronym,smallcaps]{glossaries}
 - Then, this filter will add \newacronym{LRU}{LRU}{Least Recently Used}
   for the definition of LRU and finally \gls{LRU} to every time the term
   is used in the text.
@@ -26,7 +26,7 @@ def prepare(doc):
 
 def action(e, doc):
     if isinstance(e, pf.Span) and 'ac' in e.classes:
-        acronym = pf.stringify(e)
+        acronym = pf.stringify(e).lower()
         definition = e.attributes.get('d', '')
         # Only update dictionary if definition is not empty
         if definition:
