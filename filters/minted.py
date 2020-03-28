@@ -72,7 +72,7 @@ def fenced_code(options, data, element, doc, language):
         values['mintedopts'] = r'[{}]'.format(mintedopts)
 
     caption = options.get('caption', '')
-    floating = options.get('floating', True)#.strip().lower() == 'true'
+    floating = options.get('floating', True)
     if floating:
         if caption:
             converted_caption = pf.convert_text(caption, extra_args=['--biblatex'], input_format='markdown', output_format='latex')

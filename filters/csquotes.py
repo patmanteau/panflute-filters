@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""
+r"""
 Make \\csquotes-style \\blockquotes
 See also: https://github.com/nick-ulle/pandoc-minted
 
@@ -43,7 +43,11 @@ def fenced_blockquote(options, data, element, doc, language):
 
     caption = options.get('caption', '')
     if caption:
-        converted_caption = pf.convert_text(caption, extra_args=['--biblatex'], input_format='markdown', output_format='latex')
+        converted_caption = pf.convert_text(
+            caption,
+            extra_args=['--biblatex'],
+            input_format='markdown',
+            output_format='latex')
         values['caption'] = r'\caption{{{}}}'.format(converted_caption)
 
     identifier = options.get('identifier', '')
